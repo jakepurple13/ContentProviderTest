@@ -33,7 +33,7 @@ interface PersonDao {
     @Delete
     suspend fun delete(item: Person): Int
 
-    @Query("DELETE FROM Person WHERE name=:name")
+    @Query("DELETE FROM Person WHERE :name")
     suspend fun deleteByName(name: String): Int
 
     @Update

@@ -96,7 +96,24 @@ class CustomContentProvider : ContentProvider() {
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
         return when (uriMatcher.match(uri)) {
             1 -> {
-                val count = runBlocking { userDao.deleteByName(uri.pathSegments[1]) }
+                val count = runBlocking {
+                    val array = selectionArgs
+                        ?.toList()
+                        .orEmpty()
+                    val select = selection
+                        ?.replace("?", "%s")
+                        ?.format(*array.toTypedArray())
+                        .orEmpty()
+                        .split("&")
+                        .associate { it.split("=").let { it.first() to it.last() } }
+                    val p = Person(
+                        id = select["id"]?.toInt() ?: 0,
+                        name = select["name"] ?: "",
+                        age = select["age"]?.toInt() ?: 0
+                    )
+
+                    userDao.delete(p)
+                }
                 if (count == 0) 0
                 else {
                     context!!.contentResolver.notifyChange(uri, null)

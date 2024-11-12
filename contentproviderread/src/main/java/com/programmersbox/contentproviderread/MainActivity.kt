@@ -11,12 +11,18 @@ import android.provider.BaseColumns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -80,7 +86,29 @@ class MainActivity : ComponentActivity() {
                             ListItem(
                                 headlineContent = { Text(it.name) },
                                 overlineContent = { Text(it.id.toString()) },
-                                leadingContent = { Text(it.age.toString()) }
+                                leadingContent = { Text(it.age.toString()) },
+                                trailingContent = {
+                                    Column {
+                                        IconButton(
+                                            onClick = {
+                                                scope.launch {
+                                                    personHelper.update(
+                                                        it.copy(
+                                                            name = "Jacob" + Random.nextInt(
+                                                                10,
+                                                                100
+                                                            ),
+                                                            age = Random.nextInt(10, 100)
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        ) { Icon(Icons.Default.ThumbUp, null) }
+                                        IconButton(
+                                            onClick = { scope.launch { personHelper.delete(it) } }
+                                        ) { Icon(Icons.Default.Delete, null) }
+                                    }
+                                }
                             )
                         }
                     }
@@ -183,6 +211,35 @@ class PersonResolverHelper(private val context: Context) {
                     put("age", domainData.age)
                 },
             )
+        }
+    }
+
+    suspend fun delete(person: Person) {
+        withContext(Dispatchers.IO) {
+            val d = context.contentResolver!!.delete(
+                CustomContentProviderTest.Person.DOMAIN_URI,
+                "name=?&age=?&id=?",
+                arrayOf(person.name, person.age.toString(), person.id.toString())
+            )
+
+            println(d)
+        }
+    }
+
+    suspend fun update(person: Person) {
+        withContext(Dispatchers.IO) {
+            val d = context.contentResolver!!.update(
+                CustomContentProviderTest.Person.DOMAIN_URI,
+                ContentValues().apply {
+                    put("name", person.name)
+                    put("age", person.age)
+                    put("id", person.id)
+                },
+                "name=?&age=?&id=?",
+                arrayOf(person.name, person.age.toString(), person.id.toString())
+            )
+
+            println(d)
         }
     }
 }
