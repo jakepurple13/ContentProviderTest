@@ -33,6 +33,9 @@ interface PersonDao {
     @Delete
     suspend fun delete(item: Person): Int
 
+    @Query("DELETE FROM Person WHERE id = :id")
+    suspend fun deleteById(id: Int): Int
+
     @Query("DELETE FROM Person WHERE :name")
     suspend fun deleteByName(name: String): Int
 
@@ -45,11 +48,14 @@ interface PersonDao {
     @Query("SELECT * FROM Person")
     fun getPeopleFlow(): Flow<List<Person>>
 
-    @Query(value = "SELECT * FROM Person")
+    @Query("SELECT * FROM Person")
     fun selectAll(): Cursor
 
-    @Query(value = "SELECT * FROM Person WHERE name=:name")
+    @Query("SELECT * FROM Person WHERE name=:name")
     fun selectByName(name: String): Cursor
+
+    @Query("SELECT * FROM Person WHERE id=:id")
+    suspend fun getPersonById(id: Int): Person
 }
 
 @Entity(tableName = "Person")

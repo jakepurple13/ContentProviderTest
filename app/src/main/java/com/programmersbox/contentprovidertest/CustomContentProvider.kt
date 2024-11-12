@@ -106,13 +106,18 @@ class CustomContentProvider : ContentProvider() {
                         .orEmpty()
                         .split("&")
                         .associate { it.split("=").let { it.first() to it.last() } }
+
+                    val id = requireNotNull(select["id"]?.toInt()) { "Id is required" }
+
                     val p = Person(
-                        id = select["id"]?.toInt() ?: 0,
+                        id = id,
                         name = select["name"] ?: "",
                         age = select["age"]?.toInt() ?: 0
                     )
 
-                    userDao.delete(p)
+                    println(p)
+
+                    userDao.deleteById(id)
                 }
                 if (count == 0) 0
                 else {
@@ -134,11 +139,15 @@ class CustomContentProvider : ContentProvider() {
         return when (uriMatcher.match(uri)) {
             1 -> {
                 val count = runBlocking {
+
+                    val currentPerson = userDao.getPersonById(
+                        requireNotNull(values?.get("id") as Int) { "Id required" }
+                    )
+
                     userDao.update(
-                        Person(
-                            id = values?.get("id") as Int,
-                            name = values?.get("name") as String,
-                            age = values?.get("age") as Int
+                        currentPerson.copy(
+                            name = (values.get("name") as? String) ?: currentPerson.name,
+                            age = (values.get("age") as? Int) ?: currentPerson.age
                         )
                     )
                 }
